@@ -185,12 +185,12 @@ class Model {
    * @returns {boolean}
    */
   hasAutoCorrelation () {
-		const normalValue = this._DW > Model._DL &&
-							          this._DW > Model._DU &&
-							          this._DW < 4 - Model._DU;
+    const normalValue = this._DW > Model._DL &&
+                        this._DW > Model._DU &&
+                        this._DW < 4 - Model._DU;
                         
-		return !normalValue;
-	}
+    return !normalValue;
+  }
 
   /**
    * Returns result of Goldfeld–Quandt test
@@ -324,11 +324,11 @@ class Model {
    * @param {Array} lines 
    * @returns {number} sum of e
    */
-	_getSumE (lines) {
-		return lines.reduce((acc, line) => { 
-			return acc + math.square(this._getE(line)) 
-		}, 0);
-	}
+  _getSumE (lines) {
+    return lines.reduce((acc, line) => { 
+      return acc + math.square(this._getE(line)) 
+    }, 0);
+  }
 
   /**
    * Returns common dispersion
