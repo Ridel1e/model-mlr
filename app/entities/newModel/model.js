@@ -125,8 +125,8 @@ class Model {
     const result = transposedInputs
       .multiply(modifiedInputs)
       .inverse()
-			.multiply(transposedInputs)
-			.multiply(this._output);
+      .multiply(transposedInputs)
+      .multiply(this._output);
     
 
     this._coefficients = result.getColumn(0);
