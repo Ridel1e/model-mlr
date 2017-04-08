@@ -146,11 +146,11 @@ class Model {
     const column = this._output.getColumn(0);
 
     const rss = this._getSumE(lines);
-		const dispersion = this._getDispersion(column);
+    const dispersion = this._getDispersion(column);
 
-		this._rSquare = 1 - rss / dispersion;
+    this._rSquare = 1 - rss / dispersion;
 
-		return this._rSquare;
+    return this._rSquare;
   }
 
   /**
@@ -159,24 +159,24 @@ class Model {
    * @returns {number}
    */
   calculateAutoCorrelation () {
-		if(this._DW) { return this._DW; }
+    if(this._DW) { return this._DW; }
 
-		const lines = this._getLines();
-		let sequenceSum = 0;
+    const lines = this._getLines();
+    let sequenceSum = 0;
 
-		for(let i = 1; i < lines.length; i++) {
-			const eDifference = 
-				this._getE(lines[i]) - 
-				this._getE(lines[i - 1]);
+    for(let i = 1; i < lines.length; i++) {
+      const eDifference = 
+        this._getE(lines[i]) - 
+        this._getE(lines[i - 1]);
 
-			sequenceSum += math.square(eDifference);
-		}
+      sequenceSum += math.square(eDifference);
+    }
 
-		const sumE = this._getSumE(lines);
+    const sumE = this._getSumE(lines);
 
-		this._DW = sequenceSum / sumE;
+    this._DW = sequenceSum / sumE;
 
-		return this._DW;
+    return this._DW;
   }
 
   /**
@@ -202,23 +202,23 @@ class Model {
       return this._homoscedasticity;
     }
 
-		const lines = this._getLines();
-		const sortedLines = lines
-			.slice()
-			.sort((lineA, lineB) => lineA[argIndex] - lineB[argIndex]);
+    const lines = this._getLines();
+    const sortedLines = lines
+      .slice()
+      .sort((lineA, lineB) => lineA[argIndex] - lineB[argIndex]);
 
-		const sublistSize = Math.round(sortedLines.length / 3);
+    const sublistSize = Math.round(sortedLines.length / 3);
 
-		const beginList = sortedLines.slice(0, sublistSize);
-		const endList = sortedLines.slice(sortedLines.length - sublistSize);
+    const beginList = sortedLines.slice(0, sublistSize);
+    const endList = sortedLines.slice(sortedLines.length - sublistSize);
 
-		const beginListResult = this._getSumE(beginList);
-		const endListResult = this._getSumE(endList);
+    const beginListResult = this._getSumE(beginList);
+    const endListResult = this._getSumE(endList);
 
     this._homoscedasticity = beginListResult / endListResult;
 
-		return this._homoscedasticity;
-	}
+    return this._homoscedasticity;
+  }
 
   /**
    * Returns true if model has homoscedasticity
@@ -268,10 +268,10 @@ class Model {
    * @returns {number}
    */
   predictY (input) {
-		return input.reduce((acc, x, index) => {
-			return acc + this._coefficients[index] * this._elementHandler(x);
-		}, 0);
-	}
+    return input.reduce((acc, x, index) => {
+      return acc + this._coefficients[index] * this._elementHandler(x);
+    }, 0);
+  }
 
   /* PRIVATE */
 
@@ -282,13 +282,13 @@ class Model {
    * @returns {number} e
    */
   _getE (line) {
-		const realY = line[line.length - 1];
-		const xArray = line.slice(0, line.length - 1);
+    const realY = line[line.length - 1];
+    const xArray = line.slice(0, line.length - 1);
 
-		const predictedY = this.predictY(xArray);
+    const predictedY = this.predictY(xArray);
 
-		return realY - predictedY;
-	}
+    return realY - predictedY;
+  }
 
   /**
    * Returns freedom degree of model
@@ -336,14 +336,14 @@ class Model {
    * @param {Array} column 
    * @returns {number}
    */
-	_getDispersion (column) {
-		const average = this._getAverage(column);
+  _getDispersion (column) {
+    const average = this._getAverage(column);
 
-		return column
-			.reduce((acc, x) => { 
+    return column
+      .reduce((acc, x) => { 
         return acc + math.square(x - average); 
       }, 0);
-	}
+  }
 
   /**
    * Returns average of data
@@ -352,26 +352,26 @@ class Model {
    * @returns {number}
    */
   _getAverage (list) {
-		const listSum = 
-			list.reduce((acc, x) => { 
+    const listSum = 
+      list.reduce((acc, x) => { 
         return acc + x 
       }, 0);
 
     return listSum / list.length;
-	}
+  }
 
   /**
    * Returns arguments row with y as last element
    * @private 
    * @returns {Array<Array<T>>} description
    */
-	_getLines () {
+  _getLines () {
     const inputsArray = this._input.toArray();
     const outputArray = this._output.getColumn(0); 
 
-		return inputsArray
-			.map((input, index) => input.concat(outputArray[index]));
-	}
+    return inputsArray
+      .map((input, index) => input.concat(outputArray[index]));
+  }
 
   /**
    * Returns new matrix with modified elements
