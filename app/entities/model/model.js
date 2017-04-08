@@ -166,11 +166,56 @@ class Model {
   }
 
   /**
+   * Returns result of Goldfeld–Quandt test
+   * @public 
+   * @returns {number}
+   */
+  calculateHomoscedasticity (argIndex) {
+    const inputsArray = this._inputs._data;
+    const outputsArray = this._outputs._data;
+
+    /* array with args and output to this args */
+    const lines = inputsArray
+      .map((input, index) => input.concat(outputsArray[index]))
+
+    /* sorting collection */
+    const sortedLines = lines
+        .slice()
+        .sort((lineA, lineB) => lineA[argIndex] - lineB[argIndex]);
+
+    const sublistSize = Math.round(lines.length / 3);
+
+    const beginList = sortedLines.slice(0, sublistSize);
+    const endList = sortedLines.slice(lines.length - sublistSize);
+
+    const calculateCallback = (acc, line) => {
+      const realY = line[line.length - 1];
+      const xArray = line.slice(0, line.length - 1);
+      const predictedY = this.predictY(xArray);
+
+      return acc += math.square(realY - predictedY);
+    }
+
+    const tss1 = beginList.reduce(calculateCallback , 0);
+    const tss2 = endList.reduce(calculateCallback , 0);
+
+    return tss1 / tss2;
+  }
+
+  /**
+   * 
+   */
+  hasHomoscedasticity () {
+    
+  }
+
+  /**
    * Returns true if model has multy collinearity
    * @public 
    * @returns {boolean}
    */
   hasMultiCollinearity () {
+    const transposedInput = math.transpose(this._inputs); 
 
   }
 

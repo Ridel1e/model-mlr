@@ -1,5 +1,5 @@
 import { DataProvider } from './services/data-provider';
-import { Model } from './entities/model';
+import { Model } from './entities/newModel';
 import Path from 'path';
 import Parallel from 'paralleljs';
 
@@ -41,15 +41,17 @@ function index () {
 
       /* produce models */
       const firstModelFamily = createFirstModelFamily(trainingArgs, trainingResults);
-      const secondModelFamily = createSecondModelFamily(trainingArgs, trainingResults);
-      const thirdModelFamily = createThirdModelFamily(trainingArgs, trainingResults);
-      const fourthModelFamily = createFourthModelFamily(trainingArgs, trainingResults);  
+      // const secondModelFamily = createSecondModelFamily(trainingArgs, trainingResults);
+      // const thirdModelFamily = createThirdModelFamily(trainingArgs, trainingResults);
+      // const fourthModelFamily = createFourthModelFamily(trainingArgs, trainingResults);  
 
-      firstModelFamily.forEach((model) => {
-        model.calculateCoefficients();
-        // console.log(model.calculateRSqr());
-        console.log(model.calculateAutoCorrelation(), model.hasAutoCorrelation()); 
-        model.calculateAutoCorrelation();
+      firstModelFamily.forEach((model, index) => {
+        console.log(model.calculateCoefficients());
+        console.log('R^2:', model.calculateRSquare());
+        console.log('DW:', model.calculateAutoCorrelation());
+        console.log('Has auto correlation:', model.hasAutoCorrelation());
+        console.log('getero:', model.calculateHomoscedasticity(2));
+        console.log('Has multi colleniarity:', model.hasMultiCollinearity());
       })
       
       /* concat all models */
