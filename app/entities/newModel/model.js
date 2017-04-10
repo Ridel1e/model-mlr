@@ -25,6 +25,47 @@ class Model {
   }
 
   /**
+   * Returns model compare functions. 
+   * Best models will be in top of array
+   * @public 
+   * @static 
+   * @returns {Function}
+   */
+  static getComparator () {
+    return (modelA, modelB) => {
+      /* R^2 comparision */
+      const distanceA = 1 - modelA.calculateRSquare();
+      const distanceB = 1 - modelB.calculateRSquare();
+
+      const delta = Math.abs(distanceA - distanceB);
+      
+      if(delta > 0.1) { return distanceA - distanceB; }
+
+      /* autocorrelation comparision */
+      const autoCorrComparision = 
+        booleanToNumber(modelA.hasAutoCorrelation(), modelB.hasAutoCorrelation());
+
+      if(autoCorrComparision !== 0) { return autoCorrComparision; }
+
+      /* homoscedasticity comparision */
+      const homoscedasticity =
+        booleanToNumber(modelA.hasHomoscedasticity(), modelB.hasHomoscedasticity());
+
+      if(homoscedasticity !== 0) { return homoscedasticity; }
+
+      /* homoscedasticity comparision */
+      const multiCollinearity =
+        booleanToNumber(modelA.hasMultiCollinearity(), modelB.hasMultiCollinearity());
+
+      if(multiCollinearity !== 0) { return multiCollinearity; }
+    }
+
+    function booleanToNumber (a , b) {
+      return a === b ? 0 : a ? 1 : -1;
+    }
+  }
+
+  /**
    * Returns list with all possible subsets
    * @private 
    * @static 
@@ -92,6 +133,13 @@ class Model {
    * @returns {number}
    */
   static get _DU () { return 1.74; }
+
+  /**
+   * Returns Fisher value from table
+   * @static 
+   * @returns {number}
+   */
+  static get _FISHER_VALUE () { return 2.98; }
 
   /**
    * Rerutns Hi Square
@@ -232,8 +280,10 @@ class Model {
    * @public 
    * @returns {boolean}
    */
-  hasHomoscedasticity () {
-    
+  hasHomoscedasticity (argIndex) {
+    const homoscedasticity = this.calculateHomoscedasticity(argIndex);
+
+    return homoscedasticity > Model._FISHER_VALUE;
   }
 
   /**
@@ -243,7 +293,7 @@ class Model {
    */
   hasMultiCollinearity () {
     if (this._hiCalc) { 
-      return this._hiCalc; 
+      return this._hiCalc > Model._X_SQUARE; 
     }
 
     const columns = this._input.transpose().toArray();
@@ -264,7 +314,7 @@ class Model {
     const result =  - freedomDegree * multiplier;  
     
     this._hiCalc = result;
-
+    
     return this._hiCalc > Model._X_SQUARE;   
   }
 

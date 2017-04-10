@@ -40,36 +40,45 @@ function index () {
       const testResults = results.slice(trainingDataLength);
 
       /* produce models */
+      const modelHandler = (model) => {
+        model.calculateCoefficients();
+        model.calculateRSquare();
+        model.calculateAutoCorrelation();
+        model.calculateHomoscedasticity(2);
+      };
+      
       const firstModelFamily = createFirstModelFamily(trainingArgs, trainingResults);
       const secondModelFamily = createSecondModelFamily(trainingArgs, trainingResults);
       const thirdModelFamily = createThirdModelFamily(trainingArgs, trainingResults);
       const fourthModelFamily = createFourthModelFamily(trainingArgs, trainingResults);  
 
-      const callback = (model) => {
-        console.log(model.calculateCoefficients());
-        console.log('R^2:', model.calculateRSquare());
-        console.log('DW:', model.calculateAutoCorrelation());
-        console.log('Has auto correlation:', model.hasAutoCorrelation());
-        console.log('getero:', model.calculateHomoscedasticity(2));
-        console.log('Has multi colleniarity:', model.hasMultiCollinearity());
-      };
+      firstModelFamily.forEach(modelHandler);
+      secondModelFamily.forEach(modelHandler);
+      thirdModelFamily.forEach(modelHandler);
+      fourthModelFamily.forEach(modelHandler);
 
-      const beginTime = Date.now();
-
-      firstModelFamily.forEach(callback)
-      // secondModelFamily.forEach(callback)
-      // thirdModelFamily.forEach(callback)
-      // fourthModelFamily.forEach(callback)
-      
-      const endTime = Date.now();
-      console.log(endTime - beginTime, 'ms');
+      return {
+        firstModelFamily,
+        secondModelFamily,
+        thirdModelFamily,
+        fourthModelFamily
+      }
+    })
+    .then((modelsFamilies) => {
       /* concat all models */
-      // const models = [].concat(
-      //   firstModelFamily,
-      //   secondModelFamily,
-      //   thirdModelFamily,
-      //   fourthModelFamily
-      // );
+      const allModels = [].concat(
+        modelsFamilies.firstModelFamily,
+        modelsFamilies.secondModelFamily,
+        modelsFamilies.thirdModelFamily,
+        modelsFamilies.fourthModelFamily
+      );
+
+      const bestModels = allModels
+        .slice()
+        .sort(Model.getComparator())
+        .slice(0, 10);
+
+      bestModels.forEach(printModel);
     });
 }
 
@@ -78,10 +87,24 @@ function index () {
  * @private 
  * @param {Model} model 
  */
-function printModel (model) {
-  // let xCount
+function printModel (model, index) {
+  const coefficientsString = model
+    .calculateCoefficients()
+    .reduce((acc, coef) => { 
+      return acc += `, ${coef}` 
+    }, '');
 
-  model.coefficients.forEach()
+  console.log(`Model ${index}\n`);
+  console.log('Коэффициенты', coefficientsString)
+  console.log('R^2: ', model.calculateRSquare());
+  console.log('Коэффициент Дарбина Уотсона: ', model.calculateAutoCorrelation());
+  console.log('Наличие автокорреляции:', model.hasAutoCorrelation());
+  console.log('Коэффициент Голфильда-Квандта:', model.calculateHomoscedasticity());
+  console.log('Наличие гетероскедастичности:', model.hasHomoscedasticity());
+  console.log('Наличие мультиколлинеарности:', model.hasMultiCollinearity());
+  console.log('\n')
+
+  
 }
 
 /**
@@ -164,25 +187,4 @@ function getTrainingDataLength (dataLength) {
  */
 function _resolvePath (relatedPath) {
   return Path.resolve(process.cwd(), relatedPath);
-}
-
-/**
- * Calculates average function call time
- * @private 
- * @param {Function} callback analyzed function
- * @param {number} iterationCount count of function calls
- * @param {boolean} async flag that means function returns a promise
- */
-function _calculateAverageFunctionCallTime (callback, 
-                                            iterationCount, 
-                                            async = false) {
-
-    const summaryTime = 0;
-
-    for(let i = 0; i < iterationCount; i++) {
-      const beginTime = Date.now();
-
-      // if()
-      const endTime = Date.now();
-    }
 }
