@@ -41,19 +41,28 @@ function index () {
 
       /* produce models */
       const firstModelFamily = createFirstModelFamily(trainingArgs, trainingResults);
-      // const secondModelFamily = createSecondModelFamily(trainingArgs, trainingResults);
-      // const thirdModelFamily = createThirdModelFamily(trainingArgs, trainingResults);
-      // const fourthModelFamily = createFourthModelFamily(trainingArgs, trainingResults);  
+      const secondModelFamily = createSecondModelFamily(trainingArgs, trainingResults);
+      const thirdModelFamily = createThirdModelFamily(trainingArgs, trainingResults);
+      const fourthModelFamily = createFourthModelFamily(trainingArgs, trainingResults);  
 
-      firstModelFamily.forEach((model, index) => {
+      const callback = (model) => {
         console.log(model.calculateCoefficients());
         console.log('R^2:', model.calculateRSquare());
         console.log('DW:', model.calculateAutoCorrelation());
         console.log('Has auto correlation:', model.hasAutoCorrelation());
         console.log('getero:', model.calculateHomoscedasticity(2));
         console.log('Has multi colleniarity:', model.hasMultiCollinearity());
-      })
+      };
+
+      const beginTime = Date.now();
+
+      firstModelFamily.forEach(callback)
+      // secondModelFamily.forEach(callback)
+      // thirdModelFamily.forEach(callback)
+      // fourthModelFamily.forEach(callback)
       
+      const endTime = Date.now();
+      console.log(endTime - beginTime, 'ms');
       /* concat all models */
       // const models = [].concat(
       //   firstModelFamily,

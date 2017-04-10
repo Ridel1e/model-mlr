@@ -93,6 +93,13 @@ class Model {
    */
   static get _DU () { return 1.74; }
 
+  /**
+   * Rerutns Hi Square
+   * @static 
+   * @returns {number}
+   */
+  static get _X_SQUARE () { return 16.8; }
+
   /* PROTOTYPE */
 
   /**
@@ -235,8 +242,8 @@ class Model {
    * @returns {boolean}
    */
   hasMultiCollinearity () {
-    if (this._multiCollinearity) { 
-      return this._multiCollinearity; 
+    if (this._hiCalc) { 
+      return this._hiCalc; 
     }
 
     const columns = this._input.transpose().toArray();
@@ -245,20 +252,20 @@ class Model {
       .map((column) => this._normalize(column))
       .slice(1);
 
-    const newMatrix = new Matrix(normalizedColumns).transpose();  
+    const newMatrix = new Matrix(normalizedColumns).transpose();
 
     const resultMatrix = newMatrix
       .transpose()
       .multiply(newMatrix);
 
-    const determinant = resultMatrix.det();
     const freedomDegree = this._countFreedomDegree();
-
-    const result =  - freedomDegree * Math.log(determinant);  
+    const multiplier = math.log(Math.E, resultMatrix.det());
     
-    this._multiCollinearity = result;
+    const result =  - freedomDegree * multiplier;  
+    
+    this._hiCalc = result;
 
-    return this._multiCollinearity    
+    return this._hiCalc > Model._X_SQUARE;   
   }
 
   /**
