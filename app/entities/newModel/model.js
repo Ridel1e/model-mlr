@@ -1,6 +1,7 @@
 import { Set } from '../set';
 import { Matrix } from '../matrix';
 import math from 'mathjs';
+import hash from 'object-hash';
 
 class Model {
   /* static */
@@ -162,6 +163,7 @@ class Model {
     this._input = new Matrix(input);
     this._output = new Matrix(modifiedOutput);
     this._elementHandler = elementHandler;
+    this.hash = hash(this);
   }
 
   /**

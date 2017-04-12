@@ -15,6 +15,7 @@
   "dependencies": {
     "mathjs": "^3.11.4",
     "matrix-js": "^1.2.1",
+    "object-hash": "^1.1.8",
     "paralleljs": "^0.2.1",
     "xlsx": "^0.9.9"
   }

@@ -8,6 +8,7 @@ import Parallel from 'paralleljs';
 const ARGS_FOLDER_PATH = _resolvePath('./data/args');
 const RESULTS_FOLDER_PATH = _resolvePath('./data/results');
 const TRAINING_DATA_PERSENT = 0.6; 
+const NECESSARY_MODEL_COUNT = 10;
 
 index();
 
@@ -52,99 +53,51 @@ function index () {
       thirdModelFamily.forEach(_handleModel);
       fourthModelFamily.forEach(_handleModel);
 
-      /* need refactor input */
-      return {
-        models: {
-          firstModelFamily,
-          secondModelFamily,
-          thirdModelFamily,
-          fourthModelFamily
-        },
-        data: {
-          training: { args: trainingArgs, results: trainingResults },
-          test: { args: testArgs, results: testResults }
-        }
-      }
-
-    })
-    .then((res) => {
       /* concat all models */
       const allModels = [].concat(
-        res.models.firstModelFamily,
-        res.models.secondModelFamily,
-        res.models.thirdModelFamily,
-        res.models.fourthModelFamily
-      );
-
+        firstModelFamily,
+        secondModelFamily,
+        thirdModelFamily,
+        fourthModelFamily
+      );  
+      
+      /* get 10 best models */
       const bestModels = allModels
         .slice()
         .sort(Model.getComparator())
-        .slice(0, 10);
+        .slice(0, NECESSARY_MODEL_COUNT);
 
+      /* generate all possible model pairs */  
       const possibleModelsPairs = Set
         .generateSubsetsWithElementCount(bestModels, 2);
-      const output = res.data.training.results;
-      const modelsMap = [];
 
-      const newModels =  possibleModelsPairs
-        .map((modelsPair) => {
-          const input = _createInputByModelSet(modelsPair);
+      /* creating new models by models pair */  
+      const mapModelToPair = {};  
+      const newModels = possibleModelsPairs.map((pair) => {
+        const elementHandler = (x) => x;
+        const input = _createInputByModelSet(pair);
+        const newModel = new Model(input, trainingResults, elementHandler);
+        /* saving to map */
+        mapModelToPair[newModel.hash] = pair;
 
-          const newModel = new Model(input, output, (x) => x);
-
-          /* saving */
-          modelsMap.push({
-            modelsPair,
-            model: newModel
-          });
-
-          return newModel;
-        });
-
+        return newModel;
+      });
       newModels.forEach(_handleModel);
 
       /* choose best model */
-      const bestNewModel = newModels
+      const bestModel = newModels
         .slice()
         .sort(Model.getComparator())[0];
-
-      const bestModelsPair = modelsMap
-        .filter((object) => object.model === bestNewModel)[0]
-        .modelsPair;
-
-      /* step 6 */
-      const testArgs = res.data.test.args;
-      const testResults = res.data.test.results;
+      const bestPair = mapModelToPair[bestModel.hash];  
       
-      const newTestArgs = [];
-
-      for (let i = 0; i < testResults.length; i++) {
-        const xArray = testArgs
-          .map((arg) => arg[i]);
-        
-        const completedXArray = [1].concat(xArray);
-        const models = bestModelsPair.toArray();
-        
-        const newArgRow = models
-          .map((model) => model.predictY(completedXArray));
-
-        const completedArgRow = [1].concat(newArgRow);
-
-        newTestArgs.push(completedArgRow); 
-      }
-
-      for (let i = 0; i < newTestArgs.length; i++) {
-        const xArray = newTestArgs[i];
-
-        const predictedY = bestNewModel.predictY(xArray);
-        const realY = testResults[i];
-
-        console.log('******');
-        console.log(`Предсказанное: ${predictedY}`);
-        console.log(`Реальное: ${realY}`);
-      }
-    
-    });
+      /* test best model with tests arguments */
+      const newInput = _createInputByModelSet(bestPair, testArgs);
+     
+      const predictions = 
+        _testModel(bestModel, newInput, testResults);
+      
+      _printPredictions(predictions);
+    })
 }
 
 /**
@@ -153,23 +106,88 @@ function index () {
  * @param {Set<Model>} modelSet 
  * @returns {Array<Array<T>>} description
  */
-function _createInputByModelSet (modelSet) {
-  const args = modelSet
-    .toArray()
-    .map((model) => model.getAllPredictions());
+function _createInputByModelSet (modelSet, args) {
+  const models = modelSet.toArray();
+
+  if(args) {
+    return _createInputByModelsAndArgs(models, args);
+  }
+
+  return _createInputByInnerModelsResults(models);
+}
+
+/**
+ * Returns input data by inner models y
+ * @private 
+ * @param {Array<Models>} models
+ * @returns {Array<Array<T>>}
+ */
+function _createInputByInnerModelsResults (models) {
+  const allArgs = models.map((model) => model.getAllPredictions());
 
   const input = [];
-  const length = args[0].length;
+  const inputLength = allArgs[0].length;
 
-  for(let i = 0; i < length; i++) {
-    const inputRow = args.map((column) => column[i]);
+  for(let i = 0; i < inputLength; i++) {
+    const inputRow = allArgs.map((args) => args[i]);
     input.push(inputRow);
   }
 
-  const completedInput = input
-    .map((input) => [1].concat(input));
+  const completedInput = _addOneInBegin(input);
 
   return completedInput;
+}
+
+/**
+ * Returns input data created by models and args
+ * @private 
+ * @param {Array<Models>} models 
+ * @param {Array<Array<T>>} args 
+ * @returns {Array<Array<T>>} description
+ */
+function _createInputByModelsAndArgs (models, allArgs) {
+  const input = [];
+  const inputLength = allArgs[0].length;
+
+  for(let i = 0; i < inputLength; i++) {
+    const argsRow = allArgs.map((args) => args[i]);
+    const completedArgsRow = [1].concat(argsRow);
+    
+    const newArgsRow = models
+      .map((model) => model.predictY(completedArgsRow));
+    const completedNewArgsRow = [1].concat(newArgsRow);
+
+    input.push(completedNewArgsRow);
+  }
+
+  return input;
+}
+
+/**
+ * Returns new array with 1 number at begin of all rows
+ * @private
+ * @param {Array<Array<T>>} arrays
+ * @returns {Array<Array<T>>}
+ */
+function _addOneInBegin (arrays) {
+  return arrays.map((array) => [1].concat(array));
+}
+
+/**
+ * Returns yReal - yPredicted paris
+ * @private 
+ * @param {Model} model
+ * @param {Array<Array<T>>} input
+ * @param {Array<T>} output
+ * @returns {Array<Object>} paris
+ */
+function _testModel (model, input, output) {
+  return input.map((row, index) => {
+    const predictedY = model.predictY(row);
+    const realY = output[index];
+
+    return { predictedY, realY };
+  });
 }
 
 /**
@@ -205,6 +223,20 @@ function _printModel (model, index) {
   console.log('\n');
 
 }
+
+/**
+ * Prints predictions to console
+ * @private 
+ * @param {Array<Object>} predictions
+ */
+function _printPredictions (predictions) {
+  predictions.forEach((prediction) => {
+    console.log('******')
+    console.log('Предсказанное значение: ', prediction.predictedY);
+    console.log('Реальное значение: ', prediction.realY);
+    console.log('\n');
+  })
+} 
 
 /**
  * Returns first model family
