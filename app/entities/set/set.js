@@ -5,7 +5,7 @@ class Set {
    * original vector
    * @public 
    * @static
-   * @param {Array} original list of doubles
+   * @param {Array} original list of T
    * @returns {Array} 
    */
   static generateSubsetsOf (original) {
@@ -41,7 +41,7 @@ class Set {
   static generateSubsetsWithElementCount (original, elemCount) {
     return Set
       .generateSubsetsOf(original)
-      .filter((subset) => subset.length === elemCount);
+      .filter((subset) => subset.count() === elemCount);
   }
 
   /**
@@ -63,7 +63,7 @@ class Set {
    * @public 
    * @static 
    * @param {Array<boolean>} vector 
-   * @param {Array<number>} data 
+   * @param {Array<T>} data 
    * @returns {Set} 
    */
   static createSetFromVector (vector, data) {
@@ -91,6 +91,15 @@ class Set {
    */
   toArray () {
     return this._original;
+  }
+
+  /**
+   * Returns set element count
+   * @public 
+   * @returns {number} description
+   */
+  count () {
+    return this._original.length
   }
 }
 

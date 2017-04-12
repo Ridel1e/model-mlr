@@ -325,9 +325,23 @@ class Model {
    * @returns {number}
    */
   predictY (input) {
-    return input.reduce((acc, x, index) => {
-      return acc + this._coefficients[index] * this._elementHandler(x);
+    // return input.reduce((acc, x, index) => {
+    //   return acc + this._coefficients[index] * this._elementHandler(x);
+    // }, 0);
+    return this._coefficients.reduce((acc, coef, index) => {
+      return acc + coef * this._elementHandler(input[index]);
     }, 0);
+  }
+
+  /**
+   * Returns all predicted y
+   * @public 
+   * @returns {Array}
+   */
+  getAllPredictions () {
+    const inputsArray = this._input.toArray();
+
+    return inputsArray.map((input) => this.predictY(input));
   }
 
   /* PRIVATE */
